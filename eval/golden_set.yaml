@@ -1,0 +1,84 @@
+# Golden-set scenarios for offline evaluation.
+# Each: an inbound message + the customer + the expected routing/escalation outcome.
+# `expect_primary_owner` is a Team value; `expect_escalation` is whether any
+# escalation should fire. Run: `uv run python eval/run_eval.py`.
+
+- message: "I can't sign in and my password reset link is broken"
+  customer_id: cust_1000
+  expect_primary_owner: identity_access
+  expect_escalation: false
+
+- message: "The mobile app crashes on startup every single time"
+  customer_id: cust_1001
+  expect_primary_owner: mobile_engineering
+  expect_escalation: false
+
+- message: "My latest invoice has a duplicate charge this month"
+  customer_id: cust_1002
+  expect_primary_owner: billing_ops
+  expect_escalation: true
+
+- message: "The analytics dashboard is blank and nothing loads"
+  customer_id: cust_1003
+  expect_primary_owner: data_reporting
+  expect_escalation: false
+
+- message: "The whole platform is down with 500 errors in production, this is urgent"
+  customer_id: cust_4821
+  expect_primary_owner: platform_sre
+  expect_escalation: true
+
+- message: "Our webhook integration stopped delivering events"
+  customer_id: cust_1005
+  expect_primary_owner: api_integrations_team
+  expect_escalation: false
+
+- message: "I need to export all my data for a GDPR request"
+  customer_id: cust_1006
+  expect_primary_owner: trust_privacy
+  expect_escalation: true
+
+- message: "How do I add a new teammate to my account?"
+  customer_id: cust_1007
+  expect_primary_owner: tier1_support
+  expect_escalation: false
+
+- message: "SSO sign-in keeps rejecting my password"
+  customer_id: cust_1008
+  expect_primary_owner: identity_access
+  expect_escalation: false
+
+- message: "I'm still waiting on my refund from last month"
+  customer_id: cust_1009
+  expect_primary_owner: billing_ops
+  expect_escalation: true
+
+- message: "The API is returning errors on every endpoint"
+  customer_id: cust_1010
+  expect_primary_owner: api_integrations_team
+  expect_escalation: false
+
+- message: "Reports stopped generating overnight"
+  customer_id: cust_1011
+  expect_primary_owner: data_reporting
+  expect_escalation: false
+
+- message: "Billing reports are unavailable and I need this fixed urgently"
+  customer_id: cust_2290
+  expect_primary_owner: platform_sre
+  expect_escalation: true
+
+- message: "Please delete my data per privacy regulations"
+  customer_id: cust_1013
+  expect_primary_owner: trust_privacy
+  expect_escalation: true
+
+- message: "How do I change my notification settings?"
+  customer_id: cust_1015
+  expect_primary_owner: tier1_support
+  expect_escalation: false
+
+- message: "The Android app freezes when uploading photos"
+  customer_id: cust_1016
+  expect_primary_owner: mobile_engineering
+  expect_escalation: false

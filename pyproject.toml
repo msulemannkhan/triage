@@ -1,0 +1,63 @@
+[project]
+name = "triage-orchestrator"
+version = "0.1.0"
+description = "Support conversation orchestration service — controlled, deterministic AI triage for a contact-center pipeline."
+requires-python = ">=3.12"
+dependencies = [
+    "arq>=0.28.0",
+    "deepgram-sdk>=7.2.0",
+    "fastapi>=0.136.3",
+    "langgraph>=1.2.2",
+    "langgraph-checkpoint-postgres>=3.1.0",
+    "openai>=2.38.0",
+    "psycopg-pool>=3.3.1",
+    "psycopg[binary]>=3.3.4",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "python-multipart>=0.0.29",
+    "sse-starlette>=3.4.4",
+    "structlog>=25.5.0",
+    "uvicorn[standard]>=0.48.0",
+]
+
+# Runtime dependencies are added per-milestone as each layer is built
+# (langgraph @ M4, fastapi @ M7, sqlalchemy/asyncpg @ M8, redis/arq @ M9,
+#  openai/deepgram-sdk @ M11, structlog @ M12). The manifest grows with the build.
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "pyright>=1.1",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "anyio>=4.0",
+    "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+include = ["src", "tests"]
+extraPaths = ["src"]
+typeCheckingMode = "standard"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/triage"]

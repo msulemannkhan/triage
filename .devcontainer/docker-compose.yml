@@ -1,0 +1,46 @@
+# Dev-time compose: reuses the postgres + redis services from the project's
+# root docker-compose.yml and adds an `app` service that VS Code attaches to.
+#
+# The app service mounts the repo at /workspace so edits in VS Code are live,
+# and overrides the command to keep the container running (no uvicorn here —
+# you start the API yourself from a terminal once attached).
+services:
+  postgres:
+    extends:
+      file: ../docker-compose.yml
+      service: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    extends:
+      file: ../docker-compose.yml
+      service: redis
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sleep infinity
+    volumes:
+      - ../:/workspace:cached
+    environment:
+      TRIAGE_PERSISTENCE: postgres
+      TRIAGE_DATABASE_URL: postgresql://triage:triage@postgres:5432/triage
+      TRIAGE_REDIS_URL: redis://redis:6379/0
+      TRIAGE_API_KEY: ${TRIAGE_API_KEY:-dev-key}
+      TRIAGE_LLM_PROVIDER: ${TRIAGE_LLM_PROVIDER:-heuristic}
+      TRIAGE_OPENAI_API_KEY: ${TRIAGE_OPENAI_API_KEY:-}
+      TRIAGE_OPENAI_MODEL: ${TRIAGE_OPENAI_MODEL:-gpt-5.4-mini}
+      TRIAGE_TRANSCRIBER: ${TRIAGE_TRANSCRIBER:-fake}
+      TRIAGE_DEEPGRAM_API_KEY: ${TRIAGE_DEEPGRAM_API_KEY:-}
+      TRIAGE_EXECUTION: inline
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

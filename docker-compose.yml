@@ -1,0 +1,64 @@
+# Local stack: API + arq worker + Postgres + Redis.
+# The API and worker share one image (different commands) and reach Postgres/Redis
+# by service name on the compose network. Postgres/Redis are not published to the
+# host, so this never collides with anything already on 5432/6379.
+#
+#   docker compose up --build
+#   curl -s localhost:8000/health
+
+x-app-env: &app-env
+  TRIAGE_PERSISTENCE: postgres
+  TRIAGE_DATABASE_URL: postgresql://triage:triage@postgres:5432/triage
+  TRIAGE_REDIS_URL: redis://redis:6379/0
+  TRIAGE_API_KEY: ${TRIAGE_API_KEY:-dev-key}
+  TRIAGE_LLM_PROVIDER: ${TRIAGE_LLM_PROVIDER:-heuristic}
+  TRIAGE_OPENAI_API_KEY: ${TRIAGE_OPENAI_API_KEY:-}
+  TRIAGE_OPENAI_MODEL: ${TRIAGE_OPENAI_MODEL:-gpt-5.4-mini}
+  TRIAGE_TRANSCRIBER: ${TRIAGE_TRANSCRIBER:-fake}
+  TRIAGE_DEEPGRAM_API_KEY: ${TRIAGE_DEEPGRAM_API_KEY:-}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: triage
+      POSTGRES_PASSWORD: triage
+      POSTGRES_DB: triage
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triage"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    command: uvicorn triage.main:app --host 0.0.0.0 --port 8000
+    environment:
+      <<: *app-env
+      TRIAGE_EXECUTION: queue
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: arq triage.worker.arq_app.WorkerSettings
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
